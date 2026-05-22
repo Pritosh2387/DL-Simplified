@@ -4,15 +4,13 @@ This folder contains the deep learning models, training scripts, classification 
 
 ---
 
-## Model Architecture: Swin Transformer
-To implement a state-of-the-art solution, we leverage the **Swin Transformer** (Specifically `swin_tiny_patch4_window7_224` from the `timm` library), a modern vision backbone that uses shifted windowing schemes to bring self-attention computation down to linear complexity.
+## Model Architectures
+To address the GSSoC benchmarking guidelines, we implement and fine-tune four distinct model families:
 
-* **Pretrained Weights**: ImageNet-1k fine-tuned
-* **Output Classes**: 7 (mapping directly to the 7 basic emotions)
-* **Framework**: PyTorch
-* **Loss Function**: Cross-Entropy Loss
-* **Optimizer**: AdamW (Learning Rate: `1e-4`, Weight Decay: `1e-4`)
-* **LR Scheduler**: `ReduceLROnPlateau` (factor=0.5, patience=2)
+1. **Swin Transformer** (`swin_tiny_patch4_window7_224`): A state-of-the-art vision backbone that utilizes shifted window attention mechanisms to compute self-attention with linear complexity.
+2. **EfficientNetV2** (`tf_efficientnetv2_s`): Optimizes parameter efficiency and speed through fused-MBConv and MBConv layers.
+3. **MobileNetV3 (Large)**: Incorporates hardware-aware Neural Architecture Search (NAS) to perform highly optimized, low-latency mobile inference.
+4. **DenseNet201**: Maximizes feature reuse across dense connectivity blocks, promoting gradient flow.
 
 ---
 
@@ -22,137 +20,123 @@ Human stress states can be mapped directly from fundamental facial emotions:
 1. **Stress State (High Arousal, Negative Valence)**:
    * **Classes**: `angry`, `fear`, `sad`, `disgust`
    * **Inference**: A high probability in these classes indicates a high stress index.
-2. **Non-Stress State (Positive Valence or Neutral)**:
+2. **Non-Stress State (Positive Valence or Relaxed)**:
    * **Classes**: `happy`, `neutral`
-   * **Inference**: High probability represents relaxation, satisfaction, or calm state.
-3. **Surprise (Context Dependent)**:
+   * **Inference**: Represents calm, relaxed, or positive states.
+3. **Situational Arousal**:
    * **Class**: `surprise`
-   * **Inference**: High arousal, mapped as an indeterminate/transient arousal state, often indicative of high situational stress or sudden cognitive load.
+   * **Inference**: Indicates context-dependent high arousal, indicative of sudden situational stress or cognitive load.
 
 ---
 
-## Training History & Log
-The model was trained for **10 epochs** using a GPU accelerator. Below is the exact step-by-step training progress:
+## Training History & Benchmarking Log
+All models were fine-tuned using the `AdamW` optimizer, `ReduceLROnPlateau` learning rate scheduler, and `CrossEntropyLoss` on GPU accelerators.
 
-| Epoch | Train Loss | Train Accuracy | Test Loss | Test Accuracy | Learning Rate / Action |
-| :---: | :---: | :---: | :---: | :---: | :--- |
-| **1** | 1.1882 | 54.51% | 1.0090 | 61.72% | 1e-4 |
-| **2** | 0.9664 | 63.78% | 0.9607 | 64.52% | 1e-4 |
-| **3** | 0.8748 | 67.18% | 0.9205 | 64.70% | 1e-4 |
-| **4** | 0.8042 | 69.86% | 0.8821 | 68.10% | 1e-4 |
-| **5** | 0.7371 | 72.59% | **0.8430** | 68.84% | **Best Local Test Loss** |
-| **6** | 0.6799 | 74.90% | 0.8842 | 69.13% | 1e-4 |
-| **7** | 0.6166 | 77.29% | 0.9137 | 68.43% | 1e-4 |
-| **8** | 0.5594 | 79.55% | 0.9025 | 69.69% | 1e-4 |
-| **9** | 0.4083 | 85.24% | 0.9569 | 71.02% | 1e-4 (Plateau scheduler active) |
-| **10** | 0.3440 | 87.61% | 1.0172 | **71.48%** | **Best Test Accuracy (Saved)** |
+### 1. Swin Transformer (35 Epochs)
+* **Final Test Accuracy**: **71.94%** (Best Epoch: 21)
+* **Test Loss**: 1.6009
+* **Parameters**: 28.3 Million
 
-### Training History Plots
-Below are the training history graphs showing the cross-entropy loss and classification accuracy convergence:
+### 2. EfficientNetV2 (30 Epochs)
+* **Final Test Accuracy**: **71.75%** (Best Epoch: 24)
+* **Test Loss**: 1.1521 (Extremely Stable)
+* **Parameters**: 21.5 Million
 
-![Training Accuracy and Loss Graphs](../Images/accuracy_loss_graph.png)
+### 3. MobileNetV3 (35 Epochs)
+* **Final Test Accuracy**: **69.75%** (Best Epoch: 17)
+* **Test Loss**: 1.1883
+* **Parameters**: 5.4 Million (Super Lightweight)
+
+### 4. DenseNet201 (30 Epochs)
+* **Final Test Accuracy**: **69.25%** (Best Epoch: 29)
+* **Test Loss**: 1.1714
+* **Parameters**: 20.0 Million
 
 ---
 
-## Final Model Evaluation
-* **Final Test Accuracy**: **71.48%**
-* **Total Parameters**: ~28 Million
+## Detailed Classification Reports (FER-2013 Test Set)
 
-### Detailed Classification Report
-
-| Emotion Class | Precision | Recall | F1-Score | Support (Test Images) |
+````carousel
+### Swin Transformer (71.94% Acc)
+| Emotion Class | Precision | Recall | F1-Score | Support |
 | :--- | :---: | :---: | :---: | :---: |
-| **angry** | 0.65 | 0.64 | 0.64 | 958 |
-| **disgust** | 0.88 | 0.65 | 0.75 | 111 |
-| **fear** | 0.63 | 0.51 | 0.57 | 1,024 |
-| **happy** | 0.88 | 0.90 | 0.89 | 1,774 |
-| **neutral** | 0.66 | 0.68 | 0.67 | 1,233 |
-| **sad** | 0.57 | 0.63 | 0.60 | 1,247 |
+| **angry** | 0.64 | 0.64 | 0.64 | 958 |
+| **disgust** | 0.77 | 0.74 | 0.76 | 111 |
+| **fear** | 0.63 | 0.56 | 0.59 | 1,024 |
+| **happy** | 0.89 | 0.90 | 0.89 | 1,774 |
+| **neutral** | 0.66 | 0.69 | 0.68 | 1,233 |
+| **sad** | 0.60 | 0.61 | 0.60 | 1,247 |
 | **surprise** | 0.83 | 0.83 | 0.83 | 831 |
-| **Accuracy** | | | **0.71** | **7,178** |
-| **Macro Avg** | **0.73** | **0.69** | **0.71** | **7,178** |
-| **Weighted Avg** | **0.72** | **0.71** | **0.71** | **7,178** |
+| **Accuracy** | | | **0.72** | **7,178** |
 
-### Confusion Matrix
-The confusion matrix below highlights the strong performance in detecting positive expressions and the typical challenges in separating similar negative valence classes (like `sad` and `fear`):
+<!-- slide -->
+### EfficientNetV2 (71.75% Acc)
+| Emotion Class | Precision | Recall | F1-Score | Support |
+| :--- | :---: | :---: | :---: | :---: |
+| **angry** | 0.64 | 0.65 | 0.65 | 958 |
+| **disgust** | 0.84 | 0.68 | 0.75 | 111 |
+| **fear** | 0.61 | 0.53 | 0.56 | 1,024 |
+| **happy** | 0.88 | 0.90 | 0.89 | 1,774 |
+| **neutral** | 0.64 | 0.73 | 0.68 | 1,233 |
+| **sad** | 0.62 | 0.57 | 0.60 | 1,247 |
+| **surprise** | 0.82 | 0.83 | 0.82 | 831 |
+| **Accuracy** | | | **0.72** | **7,178** |
 
-![Confusion Matrix](../Images/confusion_matrix.png)
+<!-- slide -->
+### MobileNetV3 Large (69.75% Acc)
+| Emotion Class | Precision | Recall | F1-Score | Support |
+| :--- | :---: | :---: | :---: | :---: |
+| **angry** | 0.62 | 0.62 | 0.62 | 958 |
+| **disgust** | 0.80 | 0.62 | 0.70 | 111 |
+| **fear** | 0.60 | 0.54 | 0.57 | 1,024 |
+| **happy** | 0.87 | 0.88 | 0.87 | 1,774 |
+| **neutral** | 0.63 | 0.67 | 0.65 | 1,233 |
+| **sad** | 0.57 | 0.59 | 0.58 | 1,247 |
+| **surprise** | 0.84 | 0.80 | 0.82 | 831 |
+| **Accuracy** | | | **0.70** | **7,178** |
+
+<!-- slide -->
+### DenseNet201 (69.25% Acc)
+| Emotion Class | Precision | Recall | F1-Score | Support |
+| :--- | :---: | :---: | :---: | :---: |
+| **angry** | 0.63 | 0.63 | 0.63 | 958 |
+| **disgust** | 0.64 | 0.63 | 0.64 | 111 |
+| **fear** | 0.54 | 0.54 | 0.54 | 1,024 |
+| **happy** | 0.91 | 0.86 | 0.89 | 1,774 |
+| **neutral** | 0.60 | 0.74 | 0.66 | 1,233 |
+| **sad** | 0.60 | 0.50 | 0.54 | 1,247 |
+| **surprise** | 0.80 | 0.81 | 0.81 | 831 |
+| **Accuracy** | | | **0.69** | **7,178** |
+````
 
 ---
 
-## Conclusions
-1. **State-of-the-Art Vision Transformer Performance**: Reaching a test accuracy of **71.48%** on the FER-2013 dataset is highly competitive, outperforming standard convolutional networks (CNNs) by leveraging Swin Transformer's local attention mechanisms.
-2. **Reliable Non-Stress Detection**: The `happy` class achieved an exceptional F1-score of **0.89** with 90% recall. This indicates the model is highly robust at identifying positive, non-stressed states.
-3. **Accurate High-Stress Classification**: High-stress indicators such as `angry` (F1: 0.64) and `surprise` (F1: 0.83) show strong classification scores, allowing reliable stress triggers to be mapped from live frames.
-4. **Valence Ambiguity**: The minor confusions between `sad` and `fear` are expected due to overlapping facial muscle movements (Action Units) in human stress expressions. However, because both map to a high-stress state, they do not compromise the overall stress classification accuracy.
+## Conclusions & Key Findings
+1. **Swin Transformer Superiority**: Achieving **71.94%** test accuracy on the challenging FER-2013 dataset is state-of-the-art. Its local self-attention is highly suitable for capturing highly detailed, localized facial micro-expressions.
+2. **EfficientNetV2 Stability**: EfficientNetV2 performs virtually on par (**71.75%**) while registering much lower validation losses, offering outstanding generalization with less risk of overfitting.
+3. **MobileNetV3 Efficiency**: MobileNetV3 (Large) reaches **69.75%** accuracy with only **5.4M parameters**, making it the absolute best candidate for mobile apps and live edge webcam integrations.
 
 ---
 
 ## Testing & Inference Utility (`stress_classification_test.py`)
+A flexible Python script (`stress_classification_test.py`) has been provided to run model validation and test single-image stress predictions.
 
-A flexible Python script (`stress_classification_test.py`) has been added to the `Model/` directory to facilitate testing and validation. This script supports two operational modes:
-
-### Features
-1. **Full Dataset Evaluation**: Loads the testing dataset partition, calculates classification loss and overall accuracy, generates a comprehensive scikit-learn classification report (precision, recall, f1-score for each emotion), and plots and saves a custom confusion matrix plot locally as `confusion_matrix_test.png`.
-2. **Single Image Inference**: Loads any face image (JPEG/PNG), resizes/normalizes it, performs a forward pass through the fine-tuned Swin Transformer, outputs the predicted emotion along with its mapped Stress/Non-Stress status, and prints a detailed confidence percentage breakdown for all 7 emotion classes.
-
-### Command-Line Instructions
-
-Make sure you are inside the `Model` directory:
-```bash
-cd "Emotion Based Stress Classification using DL/Model"
-```
-
-#### 1. Run Evaluation on the Test Dataset
-To evaluate the model's accuracy on the entire testing folder:
-```bash
-python stress_classification_test.py --weights best_swin_transformer_model.pth --test_dir ../Dataset/test
-```
-
-#### 2. Run Inference on a Single Facial Image
-To predict the emotion and stress state of a single face photo:
-```bash
-python stress_classification_test.py --weights best_swin_transformer_model.pth --image path/to/your/image.jpg
-```
+### Usage:
+1. **Full Dataset Evaluation**:
+   ```bash
+   cd "Emotion Based Stress Classification using DL/Model"
+   python stress_classification_test.py --weights best_swin_transformer_model.pth --test_dir ../Dataset/test
+   ```
+2. **Single Image Stress Mapping**:
+   ```bash
+   python stress_classification_test.py --weights best_swin_transformer_model.pth --image path/to/face.jpg
+   ```
 
 ---
 
 ## TensorRT Acceleration (`.engine` Models)
+To support real-time high-throughput stress classification (e.g., live webcam feeds), we converted the PyTorch models to highly optimized **TensorRT Engine files** using **FP16 half-precision** profiling on an NVIDIA GPU (GeForce RTX 4050 Laptop GPU).
 
-To support real-time high-throughput stress classification (e.g., live webcam feeds, smart camera integration), we converted both PyTorch models to highly optimized **TensorRT Engine files** using **FP16 half-precision** profiling on an NVIDIA GPU (GeForce RTX 4050 Laptop GPU).
-
-### Conversion Pipeline
-1. **PyTorch to ONNX**: Exported PyTorch `.pth` models to intermediate `.onnx` formats using PyTorch's native ONNX exporter (Opset 17) with dynamic batch axes (`batch_size`).
-2. **ONNX to TensorRT**: Compiled the `.onnx` files into serialized TensorRT `.engine` plans using the TensorRT 10.x Builder, optimizing memory management and fusing transformer attention nodes.
-
-### Generated Assets in `Model/`
 * `best_swin_transformer_model.onnx` / `final_swin_transformer_model.onnx` (Standard interoperable formats)
-* `best_swin_transformer_model.engine` (Optimized TensorRT plan for the best validation model)
-* `final_swin_transformer_model.engine` (Optimized TensorRT plan for the final epoch model)
-
-### Running Inference with TensorRT in Python
-TensorRT executes inference with massive throughput increases. Below is a code blueprint to load and run inference on the `.engine` file using TensorRT's Python bindings:
-
-```python
-import tensorrt as trt
-import numpy as np
-
-# 1. Initialize Logger and Runtime
-logger = trt.Logger(trt.Logger.WARNING)
-runtime = trt.Runtime(logger)
-
-# 2. Deserialize Engine
-with open("best_swin_transformer_model.engine", "rb") as f:
-    engine = runtime.deserialize_cuda_engine(f.read())
-
-# 3. Create Execution Context
-context = engine.create_execution_context()
-
-# 4. Bind Input/Output Tensors (TensorRT 10.x syntax)
-# (Input expected shape: [1, 3, 224, 224] for single image batch)
-context.set_input_shape("input", (1, 3, 224, 224))
-
-# Obtain GPU device pointers and perform asynchronous execution...
-# Refer to TensorRT documentation for PyCUDA/cupy memory buffer binding setups.
-```
-
+* `best_swin_transformer_model.engine` (Optimized TensorRT plan for validation)
+* `final_swin_transformer_model.engine` (Optimized TensorRT plan for final epoch)

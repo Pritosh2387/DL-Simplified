@@ -49,24 +49,29 @@ This repository consists of various machine learning projects, and all of the pr
 **Model** - This folder will contain your project file (that is .ipynb file) whether it's for analysis or prediction. In addition to the project file, it should also have a **'README.md'** using this [template](https://github.com/abhisheks008/DL-Simplified/blob/main/.github/readme_template.md) and **'requirements.txt'** file that includes all necessary add-ons and libraries for the project.</br></br>
 
 ```
-Project Folder
-|- Dataset
-   |- dataset.csv (dataset used for the particula project)
-   |- README.md (brief about the dataset)
-|- Images
-   |- img1.png
-   |- img2.png
-   |- img3.png
-|- Model
-   |- project_folder.ipynb
-   |- README.md
-|- Web App (Only if you are implementing any GUI, optional one)
-   |- templates
-   |- static
-   |- app.py
-   |- demo.mp4
-   |- README.md
-|- requirements.txt
+Project Folder Name/
+|
+├── Dataset/
+|   ├── dataset.csv     <- Upload the dataset file inside the Dataset folder
+|   └── README.md       <- Dataset details. If the dataset file is too large, put the link.
+|
+├── Images/
+|   ├── img1.png        <- EDA images
+|   ├── img2.png        <- Model related images
+|   ├── img3.png        <- Accuracy score related images
+|   └── img4.png        <- confusion matrix related images
+|
+├── Model/
+|   ├── project_folder_name.ipynb  <- Jupyter notebook file (master)
+|   └── README.md       <- README file on the Models
+|
+├── Web App/
+|   ├── web_app.py      <- Web app to demo the project
+|   ├── README.md       <- README file to demo and overview of the web app
+|   └── web_app.mp4     <- Recorded video for the demo of the web app. To be included in README.
+|
+├── README.md           <- Master README.md file for the project folder
+└── requirements.txt    <- requirements file for the list of plugin(s) & functions
 ```
 
 Please follow the [Code of Conduct](https://github.com/abhisheks008/DL-Simplified/blob/main/Code_of_conduct.md) and [Contributing Guidelines](https://github.com/abhisheks008/DL-Simplified/blob/main/CONTRIBUTING.md) while contributing in this project repository.
